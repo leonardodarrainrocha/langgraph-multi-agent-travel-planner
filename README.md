@@ -109,19 +109,7 @@ This approach reduces the amount of data stored in the shared state and avoids u
 
 ## System Workflow
 
-The workflow follows an iterative execution model.
-
-The user request is first processed by the Supervisor Agent. The Supervisor determines which specialized task should be executed and sends the corresponding input to the selected agent.
-
-The specialized agent generates the required parameters, calls the MCP tool, processes the returned data using Python, and stores the reduced result in the shared state.
-
-The Supervisor then evaluates the updated state and decides whether another specialized agent is required or whether the workflow can move to the Response Agent.
-
-A typical execution can follow this sequence:
-
-User Input → Supervisor Agent → Flight Agent → MCP Client → MCP Server → SerpAPI → Python Data Extraction → Flight Result → Supervisor Agent → Hotel Agent → MCP Client → MCP Server → SerpAPI → Python Data Extraction → Hotel Result → Supervisor Agent → Restaurant Agent → MCP Client → MCP Server → SerpAPI → Python Data Extraction → Restaurant Result → Supervisor Agent → Response Agent → Final Response
-
-The execution is dynamic. The Supervisor does not follow a fixed sequence and can decide which agent should run based on the current state.
+![System Architecture](./docs/workflow_diagram.png)
 
 ## Project Structure
 
@@ -287,10 +275,15 @@ The architecture has been designed to support future Agentic capabilities, inclu
 
 ## Status
 
-Active development project focused on demonstrating practical Multi Agent and Agentic AI architecture using LangGraph and MCP.
+Production system available for live demonstration during interviews.
+
+## Repository Note
+
+Source code is private due to infrastructure and deployment constraints.
+Full technical walkthrough and live demo are available upon request.
 
 ## Author
 
-Leonardo Darrain Rocha
-Senior Software Engineer
-https://www.linkedin.com/in/leonardo-darrain-rocha-a6062354/
+Leonardo Darrain Rocha  
+Senior Software Engineer  
+https://www.linkedin.com/in/leonardo-darrain-rocha-a6062354/  
