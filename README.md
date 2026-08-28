@@ -30,82 +30,28 @@ The project focuses on modular architecture, clear separation of responsibilitie
 
 ## Architecture
 
-The application is organized as a Multi Agent workflow where each specialized agent has a clearly defined responsibility.
+The system uses a Multi Agent architecture orchestrated by LangGraph.
 
-**Supervisor Layer**
+Supervisor
+Receives the user request, checks the workflow state, decides which agent should run next and generates the instructions for that agent.
 
-* Receives the user request
-* Understands the current workflow state
-* Determines which specialized agent should execute next
-* Generates the required agent input
-* Decides when the workflow should move to the final response
+Specialized Agents
+Flight, Hotel and Restaurant agents interpret the instructions, generate the parameters required by the MCP tools and process the returned data.
 
-**Flight Agent**
+MCP Layer
+The MCP Client communicates with the MCP Server, which exposes the travel search tools and connects to SerpAPI.
 
-* Interprets the task received from the Supervisor
-* Uses an LLM to generate the required MCP parameters
-* Calls the MCP Client
-* Receives the raw flight data
-* Uses Python to extract and reduce the relevant information
-* Stores the processed result in the shared AgentState
+Data Processing
+Python extracts the relevant information from the API responses before storing it in the shared AgentState. This avoids unnecessary LLM calls and keeps the data structured.
 
-**Hotel Agent**
+Response Agent
+Uses the collected information and the Supervisor instructions to generate the final response for the user.
 
-* Interprets the task received from the Supervisor
-* Uses an LLM to generate the required MCP parameters
-* Calls the MCP Client
-* Receives the raw hotel data
-* Uses Python to extract and reduce the relevant information
-* Stores the processed result in the shared AgentState
+Shared State
+AgentState is shared across the workflow and contains the user request, routing information and processed results.
 
-**Restaurant Agent**
-
-* Interprets the task received from the Supervisor
-* Uses an LLM to generate the required MCP parameters
-* Calls the MCP Client
-* Receives the raw restaurant data
-* Uses Python to extract and reduce the relevant information
-* Stores the processed result in the shared AgentState
-
-**MCP Layer**
-
-* Provides a standardized interface between the agents and external tools
-* Exposes travel search tools through an MCP Server
-* Handles communication with SerpAPI
-* Returns the external API response to the corresponding agent
-
-The MCP layer does not perform the business filtering or summarization of the results.
-
-**Data Processing Layer**
-
-The raw responses returned by external APIs can contain a large amount of information that is not required by the following stages of the workflow.
-
-Instead of using another LLM or another agent to summarize this information, each specialized agent uses a deterministic Python extraction function.
-
-For example, the Flight Agent uses a function that extracts relevant information such as airline, flight number, departure, arrival, duration, and price.
-
-The same architecture is applied to hotels and restaurants.
-
-This approach reduces the amount of data stored in the shared state and avoids unnecessary LLM calls, token consumption, and non deterministic filtering.
-
-**Response Layer**
-
-* Receives the information collected by the specialized agents
-* Uses the Response Agent to generate the final answer
-* Presents the available travel information in a clear and useful format
-* Does not perform additional external searches
-
-**LLM Layer**
-
-* Groq API
-* LangChain ChatGroq
-* LLM based reasoning for routing and parameter generation
-
-**State Management**
-
-* Shared AgentState across the LangGraph workflow
-* Structured data validation using Pydantic
-* Stores the user request, routing information, and processed travel results
+LLM Layer
+Groq and LangChain ChatGroq are used for routing, reasoning and parameter generation.
 
 ## System Workflow
 
@@ -146,7 +92,6 @@ This approach reduces the amount of data stored in the shared state and avoids u
 │   │
 │   ├── prompts/
 │   │   ├── flight_prompt.py
-│   │   ├── flight_result_prompt.py
 │   │   ├── hotel_prompt.py
 │   │   ├── restaurant_prompt.py
 │   │   ├── response_prompt.py
@@ -185,6 +130,14 @@ This approach reduces the amount of data stored in the shared state and avoids u
 * FastAPI
 * Docker
 
+## API Demonstration
+
+![System Architecture](./docs/swagger_01.bmp)
+
+![System Architecture](./docs/swagger_02.bmp)
+
+![System Architecture](./docs/swagger_03.bmp)
+
 ## MCP Integration
 
 The project uses Model Context Protocol to separate the Agentic workflow from external travel services.
@@ -197,29 +150,15 @@ The current architecture uses MCP for travel related searches including flights,
 
 ## Data Processing Strategy
 
-A key design decision in this project is the separation between LLM reasoning and deterministic data processing.
+The LLM is used to understand the request and generate the parameters needed by the MCP tools.
 
-The LLM is used when interpretation or reasoning is required, such as understanding the task and generating the parameters required by the MCP tool.
+After receiving the data from the external API, Python extracts the relevant information before storing it in the AgentState.
 
-Once the external API returns structured data, Python is used to extract the relevant fields and reduce the result.
+This avoids unnecessary LLM calls, reduces token usage, and keeps the data processing simple and predictable.
 
-This means that the workflow does not introduce an additional agent simply to summarize or filter API responses.
+**Flow:**
 
-The processing flow is therefore:
-
-External API
-
-MCP Server
-
-Raw Response
-
-Python Extraction
-
-Reduced Result
-
-AgentState
-
-This approach improves efficiency, reduces token usage, and makes the extraction process predictable and reproducible.
+External API → MCP Server → Python Extraction → AgentState
 
 ## Async Architecture
 
